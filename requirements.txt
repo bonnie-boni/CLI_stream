@@ -1,0 +1,4 @@
+google-generativeai
+yt-dlp
+python-vlc
+python-dotenv
