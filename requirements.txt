@@ -2,3 +2,7 @@ google-generativeai
 yt-dlp
 python-vlc
 python-dotenv
+pandas
+rich
+questionary
+typer
