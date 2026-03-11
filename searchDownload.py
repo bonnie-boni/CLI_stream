@@ -1,9 +1,25 @@
 import yt_dlp
 import os
+import sys
+import threading
+import itertools
+import time
 
 def song_exists(title):
     path = f"music/{title}.mp3"
     return os.path.exists(path)
+
+
+def _spinner(stop_event, prefix="Searching  "):
+    for ch in itertools.cycle("|/-\\"):
+        if stop_event.is_set():
+            break
+        sys.stdout.write('\r' + prefix + ch)
+        sys.stdout.flush()
+        time.sleep(0.1)
+    # clear the line after stopping
+    sys.stdout.write('\r' + ' ' * (len(prefix) + 2) + '\r')
+    sys.stdout.flush()
 
 def search_and_download(query):
     url = f"ytsearch10:{query}"
@@ -22,8 +38,16 @@ def search_and_download(query):
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        print("Searching ...")
-        info = ydl.extract_info(url, download=False)
+        stop_event = threading.Event()
+        spinner_thread = threading.Thread(target=_spinner, args=(stop_event,))
+        spinner_thread.daemon = True
+        spinner_thread.start()
+        try:
+            info = ydl.extract_info(url, download=False)
+        finally:
+            stop_event.set()
+            spinner_thread.join()
+
         entries = info.get("entries", [])
 
         print(f"\n{len(entries)} song(s) found for '{query}'.")
