@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>music · UI from image</title>
+    <!-- Tailwind via CDN + basic inter activity -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome 6 (free icons) for symbols used in the image -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* subtle simulation of the status bar time '9:41' & clean font */
+        body { background: #0b0b0e; font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .status-time { font-size: 0.85rem; font-weight: 500; letter-spacing: -0.01em; }
+        .glass-card { background: rgba(20, 20, 25, 0.8); backdrop-filter: blur(1px); border: 1px solid rgba(60, 60, 70, 0.5); }
+        .divider-light { height: 1px; background: #2c2c32; }
+        .image-mock-icon { background: #3a3a44; border-radius: 6px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: #a0a0b0; font-size: 24px; }
+        .text-muted { color: #9b9bb5; }
+        .text-sub { color: #b1b1c0; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 bg-black">
+
+    <!-- main card: replicates the layout from the image (9:41 top, music library look) -->
+    <div class="w-full max-w-[400px] bg-[#121216] rounded-3xl shadow-2xl border border-[#2a2a30] overflow-hidden">
+
+        <!-- header with time & icons exactly as described (9:41 top left) -->
+        <div class="flex items-center justify-between px-5 pt-4 pb-1">
+            <span class="text-white font-semibold status-time">9:41</span>
+            <div class="flex items-center gap-2 text-white/80">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+
+        <!-- main content -->
+        <div class="px-4 pb-5">
+
+            <!-- Search / "Q Find your favorite songs" -->
+            <div class="mt-2 mb-5">
+                <div class="bg-[#1e1e24] flex items-center rounded-xl px-4 py-3 border border-[#33333d]">
+                    <i class="fas fa-search text-[#8e8e9f] mr-3 text-sm"></i>
+                    <span class="text-[#8e8e9f] text-base">Find your favorite songs</span>
+                </div>
+            </div>
+
+            <!-- Tracks · Playlists · Import + Date / Name segment (exactly as image) -->
+            <div class="flex items-center justify-between mb-1">
+                <!-- left three tab-like items -->
+                <div class="flex gap-6 text-base">
+                    <span class="text-white font-medium border-b-2 border-white pb-1">Tracks</span>
+                    <span class="text-[#8e8e9f]">Playlists</span>
+                    <span class="text-[#8e8e9f]">Import</span>
+                </div>
+                <!-- right side: Date / Name with icon -->
+                <div class="flex items-center gap-2 text-[#8e8e9f] text-sm">
+                    <span>Date</span>
+                    <span class="text-white">Name</span>
+                    <i class="fas fa-chevron-down text-[10px] text-white"></i>
+                </div>
+            </div>
+
+            <!-- thin divider line (optional but present in design vibe) -->
+            <div class="divider-light my-3"></div>
+
+            <!-- tracklist (exactly as mentioned in the image) -->
+            <div class="space-y-3.5 mt-2">
+
+                <!-- Unholy (feat. Kim Petras) - Save Smith, Kim Petras -->
+                <div class="flex items-start gap-3">
+                    <div class="image-mock-icon shrink-0"><i class="fas fa-circle text-[#bc78b0]"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex justify-between items-start">
+                            <h4 class="text-white font-medium truncate pr-2">Unholy (feat. Kim Petras)</h4>
+                            <span class="text-[#8e8e9f] text-xs whitespace-nowrap ml-1"><i class="far fa-clock"></i></span>
+                        </div>
+                        <p class="text-[#8e8e9f] text-sm truncate">Save Smith, Kim Petras</p>
+                    </div>
+                </div>
+
+                <!-- Fm Good (Blue) - David Guetta, Bebe Rexha  (typo preserved from image: "Fm Good (Blue)") -->
+                <div class="flex items-start gap-3">
+                    <div class="image-mock-icon shrink-0"><i class="fas fa-music text-[#47a3ff]"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="text-white font-medium truncate">Fm Good (Blue)</h4>
+                        <p class="text-[#8e8e9f] text-sm truncate">David Guetta, Bebe Rexha</p>
+                    </div>
+                </div>
+
+                <!-- As It Was - Harry Styles -->
+                <div class="flex items-start gap-3">
+                    <div class="image-mock-icon shrink-0"><i class="fas fa-crown text-amber-300"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="text-white font-medium truncate">As It Was</h4>
+                        <p class="text-[#8e8e9f] text-sm truncate">Harry Styles</p>
+                    </div>
+                </div>
+
+                <!-- Quevedo:Bzrp Music Sessions, Vol... - Bzzareq, Quevedo (as per image) -->
+                <div class="flex items-start gap-3">
+                    <div class="image-mock-icon shrink-0"><i class="fas fa-microphone-alt text-[#f28b82]"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="text-white font-medium truncate">Quevedo:Bzrp Music Sessions, Vol...</h4>
+                        <p class="text-[#8e8e9f] text-sm truncate">Bzzareq, Quevedo</p>
+                    </div>
+                </div>
+
+                <!-- La Bachata - Manuel Tuzio (intentionally "Tuzio", from image) -->
+                <div class="flex items-start gap-3">
+                    <div class="image-mock-icon shrink-0"><i class="fas fa-guitar text-[#b5a36b]"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="text-white font-medium truncate">La Bachata</h4>
+                        <p class="text-[#8e8e9f] text-sm truncate">Manuel Tuzio</p>
+                    </div>
+                </div>
+
+                <!-- Titi Me Pregunto - Bad Bunny -->
+                <div class="flex items-start gap-3">
+                    <div class="image-mock-icon shrink-0"><i class="fas fa-rabbit text-[#c586c0]"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="text-white font-medium truncate">Titi Me Pregunto</h4>
+                        <p class="text-[#8e8e9f] text-sm truncate">Bad Bunny</p>
+                    </div>
+                </div>
+
+                <!-- Under The Influence - Chris Brown -->
+                <div class="flex items-start gap-3">
+                    <div class="image-mock-icon shrink-0"><i class="fas fa-moon text-[#6a9fb5]"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="text-white font-medium truncate">Under The Influence</h4>
+                        <p class="text-[#8e8e9f] text-sm truncate">Chris Brown</p>
+                    </div>
+                </div>
+
+                <!-- Ain't Worried (no artist, but we keep as image) -->
+                <div class="flex items-start gap-3">
+                    <div class="image-mock-icon shrink-0"><i class="fas fa-peace text-white"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="text-white font-medium truncate">Ain't Worried</h4>
+                        <p class="text-[#8e8e9f] text-sm truncate"></p>
+                    </div>
+                </div>
+
+                <!-- The Weeknd - D ...  More Releases (special treatment with right element) -->
+                <div class="flex items-start gap-3">
+                    <div class="image-mock-icon shrink-0"><i class="fas fa-star text-yellow-400"></i></div>
+                    <div class="min-w-0 flex-1 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-white font-medium truncate">The Weeknd - D ...</h4>
+                            <p class="text-[#8e8e9f] text-sm truncate">More Releases</p>
+                        </div>
+                        <span class="text-[#9b9bb5] text-xs border border-[#3a3a44] rounded-full px-3 py-0.5">new</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OFFLINE MUSIC + SL-1200MK7 line (as in the image) -->
+            <div class="flex items-center justify-between mt-6 bg-[#1a1a20] py-3 px-3 rounded-xl border border-[#31313a]">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-cloud text-[#6d6d8a] text-sm"></i>
+                    <span class="text-white text-sm font-medium">OFFLINE MUSIC</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <i class="fas fa-sliders-h text-[#8e8e9f] text-xs"></i>
+                    <span class="text-[#bebed9] text-sm tracking-wide">SL-1200MK7</span>
+                </div>
+            </div>
+
+            <!-- Easy On Me (Official Vi ... - Acid Ghost -->
+            <div class="flex items-start gap-3 mt-5">
+                <div class="image-mock-icon shrink-0 bg-[#2e2e3a]"><i class="fas fa-play text-[#66cc99]"></i></div>
+                <div class="min-w-0 flex-1">
+                    <h4 class="text-white font-medium truncate">Easy On Me (Official Vi ...</h4>
+                    <p class="text-[#8e8e9f] text-sm truncate">Acid Ghost</p>
+                </div>
+            </div>
+
+            <!-- PROIBIDO CV-DJVLOPARÁISO + 104 Songs (exact as image) -->
+            <div class="flex items-center justify-between mt-5 bg-gradient-to-r from-[#20202a] to-[#15151c] p-3 rounded-2xl border border-[#353540]">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-[#b3005e] flex items-center justify-center text-white text-lg font-bold">P</div>
+                    <div>
+                        <h3 class="text-white font-semibold text-base">PROIBIDO CV-DJVLOPARÁISO</h3>
+                        <p class="text-[#a0a0b5] text-xs">mix · 104 Songs</p>
+                    </div>
+                </div>
+                <i class="fas fa-ellipsis-h text-[#8e8e9f]"></i>
+            </div>
+
+            <!-- tiny decorative hint: the original had "104 Songs" already included, but we also have a minimal tab bar (optional) to match modern player -->
+            <div class="flex items-center justify-around mt-6 text-[#5f5f73] text-xs border-t border-[#26262e] pt-4">
+                <i class="fas fa-house text-[#d6d6e6] text-lg"></i>
+                <i class="fas fa-search text-lg"></i>
+                <i class="fas fa-layer-group text-lg"></i>
+                <i class="fas fa-user-circle text-lg"></i>
+            </div>
+
+        </div> <!-- inner padding end -->
+    </div> <!-- card end -->
+
+    <!-- small caption to indicate public / structure follows the image spec -->
+    <div class="fixed bottom-2 right-4 text-[#5f5f7a] text-xs hidden md:block">
+        <i class="far fa-folder-open mr-1"></i> public / components / tailwind
+    </div>
+</body>
+</html>
