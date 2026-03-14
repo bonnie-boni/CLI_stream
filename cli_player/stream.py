@@ -16,7 +16,33 @@ from rich.live import Live
 from rich.panel import Panel
 
 console = Console()
-MUSIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "music")
+
+
+def _default_downloads_dir():
+    """Return the best-effort device Downloads directory across platforms."""
+    # Android/Termux-style shared storage first.
+    if os.environ.get("ANDROID_ROOT") or os.environ.get("ANDROID_DATA"):
+        shared = "/storage/emulated/0/Download"
+        if os.path.isdir(shared):
+            return shared
+
+    # XDG (Linux and some Unix environments) can explicitly define Downloads.
+    xdg = os.environ.get("XDG_DOWNLOAD_DIR")
+    if xdg:
+        xdg = xdg.replace("$HOME", os.path.expanduser("~"))
+        return os.path.expanduser(xdg)
+
+    # Windows and common desktop fallback.
+    if os.name == "nt":
+        user_profile = os.environ.get("USERPROFILE") or os.path.expanduser("~")
+        return os.path.join(user_profile, "Downloads")
+
+    # macOS/Linux fallback.
+    home = os.path.expanduser("~")
+    return os.path.join(home, "Downloads")
+
+
+MUSIC_DIR = os.path.join(_default_downloads_dir(), "music")
 
 GENRES = [
     "Afrobeats","Gospel", "Amapiano", "Pop", "Rock", "Hip Hop", "R&B", "Reggae", "EDM",
@@ -281,7 +307,7 @@ def download_playlist_songs(songs):
                     ydl.download([song["webpage_url"]])
             except Exception:
                 console.print(f"[yellow]Skipped:[/yellow] {song['title']}")
-    console.print(f"[bold green]Playlist download complete: {MUSIC_DIR}[/bold green]")
+    console.print(f"[bold green]Playlist download complete(in Downloads/music): {MUSIC_DIR}[/bold green]")
 
 
 # ── Player detection ──────────────────────────────────────────────────────────
@@ -323,7 +349,7 @@ def render_player(title, elapsed, duration, paused=False, repeat=False, track_nu
 
     `status_message` is an optional short string shown above the progress bar (e.g. "Building artist queue...").
     """
-    width = 82
+    width = 42
     if duration > 0:
         elapsed = min(elapsed, duration)
         ratio = min(elapsed / duration, 1.0)
@@ -823,7 +849,7 @@ def run_playlist(songs, start_index=0, auto_artist_playlist=False, allow_mixes=F
             try:
                 with yt_dlp.YoutubeDL(_ydl_download_opts()) as ydl:
                     ydl.download([song_url])
-                status_ref[0] = f"⬇ Download complete: {song.get('title', 'Unknown')}"
+                status_ref[0] = f"⬇ Download complete(in Downloads/music): {song.get('title', 'Unknown')}"
             except Exception:
                 status_ref[0] = f"⚠ Download failed: {song.get('title', 'Unknown')}"
 

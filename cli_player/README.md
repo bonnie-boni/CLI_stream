@@ -60,7 +60,7 @@ python cli/stream.py
 
 ## Downloads
 
-- Song downloads are stored in the `music/` directory.
+- Song downloads are stored in the `Downloads/music/` directory.
 - Audio is converted to MP3 at 192 kbps using ffmpeg post-processing.
 
 ## Notes

@@ -1,0 +1,24 @@
+[project]
+name = "stream-cli"
+version = "0.1.0"
+description = "A terminal-based music player that searches, streams audio, and supports downloads."
+authors = [
+    {name = "bonnie-boni",email = "xanensismo@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "yt-dlp",
+    "python-vlc",
+    "python-dotenv",
+    "pandas",
+    "rich",
+    "questionary",
+    "typer",
+    "psutil"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
