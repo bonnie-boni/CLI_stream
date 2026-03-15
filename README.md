@@ -1,6 +1,6 @@
 # CLI Music Player
 
-A terminal-based music player that searches YouTube, streams audio, and supports downloads.
+A terminal-based music player that searches and streams audio, and supports downloads.
 
 ## Features
 
@@ -65,7 +65,6 @@ python cli/stream.py
 
 ## Notes
 
-- The app attempts to read browser cookies for better YouTube access.
 - Duplicate entries are filtered using normalized title + artist/uploader fields.
 - Only one playback process is allowed at a time; the current song is terminated before next/previous playback starts.
 

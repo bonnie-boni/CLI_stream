@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+stream.py
+cli_music.egg-info/PKG-INFO
+cli_music.egg-info/SOURCES.txt
+cli_music.egg-info/dependency_links.txt
+cli_music.egg-info/entry_points.txt
+cli_music.egg-info/requires.txt
+cli_music.egg-info/top_level.txt

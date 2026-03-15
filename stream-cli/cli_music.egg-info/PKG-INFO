@@ -1,0 +1,79 @@
+Metadata-Version: 2.4
+Name: cli-music
+Version: 0.1.1
+Summary: A terminal-based music player that searches, streams audio, and supports downloads.
+Author-email: bonnie-boni <xanensismo@gmail.com>
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: yt-dlp
+Requires-Dist: python-dotenv
+Requires-Dist: pandas
+Requires-Dist: rich
+Requires-Dist: questionary
+Requires-Dist: typer
+Requires-Dist: psutil
+
+# CLI Music Player
+
+A terminal-based music player that searches and streams audio, and supports downloads.
+
+## Requirements
+
+- Python 3.10+
+- pip or uv installed
+- Internet😂😁😁
+
+## Install
+
+Install dependencies from your CLI:
+
+```bash
+pip install cli-music
+```
+or
+```bash
+uv pip install cli-music
+```
+
+## Run
+Just run the command from your terminal
+
+```bash
+cli-music
+```
+
+
+## Features
+
+- Search songs by free text query.
+- Discover songs by genre + mood.
+- Load more results for the same query in batches.
+- Play from a pasted YouTube URL (playlist or single video).
+- De-duplicate songs by normalized title + artist/uploader.
+- Keyboard controls during playback:
+  - N: Next song
+  - P: Previous song
+  - Q: Quit player
+  - S: Back to search/mode selection
+  - D: Download current song
+  - D then P quickly: Download all songs in current queue
+
+## Modes
+
+1. Search Song
+   - Enter any query.
+   - Optionally include mixes/playlists.
+   - Optionally sort by year.
+   - Use "[ Load more results ]" in picker to fetch more songs.
+
+2. Discover by Genre + Mood
+   - Pick genre and mood, then proceed the same way as Search Song.
+
+3. Play from YouTube URL
+   - Paste a YouTube playlist URL or a single video URL.
+   - Songs are loaded directly.
+   - This mode skips query/mood/sort prompts.
+
+## Downloads
+
+- Song downloads are stored in the `Downloads/music/` directory.
