@@ -1,2 +1,2 @@
 [console_scripts]
-cli-music = stream:main
+cli-music = cli_music.main:run

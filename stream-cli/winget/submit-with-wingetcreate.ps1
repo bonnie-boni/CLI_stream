@@ -1,7 +1,7 @@
 param(
   [string]$Identifier = "BonnieBoni.CliMusic",
-  [string]$Version = "0.1.1",
-  [string]$InstallerUrl = "https://github.com/bonnie-boni/cli-player/releases/download/v0.1.1/cli-music-windows-x64.exe",
+  [string]$Version = "0.1.2",
+  [string]$InstallerUrl = "https://github.com/bonnie-boni/cli-player/releases/download/v0.1.2/cli-music-windows-x64.exe",
   [string]$PrTitle = "",
   [string]$Token = ""
 )
@@ -67,13 +67,12 @@ $content = [regex]::Replace($content, '(?m)^\s*InstallerSha256:\s*.*$', "    Ins
 Set-Content -Path $installerManifest -Value $content -NoNewline
 
 Write-Host "Submitting manifests at: $versionDir"
-$args = @("submit")
-if ($PrTitle) {
-  $args += @("--prtitle", $PrTitle)
+if ($PrTitle -and $Token) {
+  & wingetcreate submit --prtitle $PrTitle --token $Token $versionDir
+} elseif ($PrTitle) {
+  & wingetcreate submit --prtitle $PrTitle $versionDir
+} elseif ($Token) {
+  & wingetcreate submit --token $Token $versionDir
+} else {
+  & wingetcreate submit $versionDir
 }
-if ($Token) {
-  $args += @("--token", $Token)
-}
-$args += $versionDir
-
-& wingetcreate @args

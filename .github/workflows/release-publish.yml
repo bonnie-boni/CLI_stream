@@ -1,0 +1,88 @@
+name: Release Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish-and-package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python build tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+
+      - name: Build PyPI distributions
+        working-directory: stream-cli
+        run: python -m build
+
+      - name: Publish to PyPI
+        if: github.event_name == 'release'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: stream-cli/dist/
+
+      - name: Compute release metadata
+        id: meta
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "release" ]]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG="v0.0.0-dev"
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build winget manifest bundle
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          cd stream-cli
+          python -m zipfile -c ../release-assets/winget-manifests-${{ steps.meta.outputs.version }}.zip winget/manifests
+
+      - name: Install Debian source build tooling
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev debhelper dh-python python3-all python3-setuptools python3-wheel pybuild-plugin-pyproject devscripts
+
+      - name: Build Debian source upload artifacts
+        shell: bash
+        run: |
+          cd stream-cli
+          dpkg-buildpackage -S -us -uc -d
+          cd ..
+          mkdir -p release-assets
+          cp ./*.dsc release-assets/ || true
+          cp ./*.debian.tar.* release-assets/ || true
+          cp ./*.tar.* release-assets/ || true
+          cp ./*.changes release-assets/ || true
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-${{ steps.meta.outputs.version }}
+          path: release-assets/*
+
+      - name: Attach assets to GitHub release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          files: release-assets/*

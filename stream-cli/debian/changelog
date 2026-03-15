@@ -1,0 +1,6 @@
+cli-music (0.1.2-1) unstable; urgency=medium
+
+  * Add cross-platform keyboard input support for Linux/macOS.
+  * Add Debian packaging metadata for apt distribution.
+
+ -- bonnie-boni <xanensismo@gmail.com>  Sun, 15 Mar 2026 10:00:00 +0000

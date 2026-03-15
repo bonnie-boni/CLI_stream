@@ -1,0 +1,25 @@
+Source: cli-music
+Section: sound
+Priority: optional
+Maintainer: bonnie-boni <xanensismo@gmail.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools,
+ python3-wheel
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+Homepage: https://github.com/bonnie-boni/cli-player
+
+Package: cli-music
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ ffmpeg,
+ mpv | vlc | ffplay
+Description: Terminal music player for search, streaming, and downloads
+ CLI Music is a terminal-based player that searches tracks from YouTube,
+ streams audio in local players, and supports song downloads.

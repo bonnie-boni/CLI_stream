@@ -2,6 +2,8 @@ yt-dlp
 python-dotenv
 pandas
 rich
+ffmpeg
+ffplay
 questionary
 typer
 psutil

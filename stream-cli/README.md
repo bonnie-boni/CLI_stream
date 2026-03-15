@@ -5,23 +5,29 @@ A terminal-based music player that searches and streams audio, and supports down
 ## Requirements
 
 - Python 3.10+
-- pip or uv installed but its not a must you can use built in winget
-- Internet😂😁😁
+- pip or uv
+- An internet connection
+- One local audio player: mpv, VLC, or ffplay
 
 ## Install
 
-Install dependencies from your CLI:
+Install from your preferred package channel:
 
-```bash
-winget install cli-music
-```
-or
 ```bash
 pip install cli-music
 ```
 or
 ```bash
 uv pip install cli-music
+```
+or
+```bash
+winget install BonnieBoni.CliMusic
+```
+or (Debian/Ubuntu after repository setup)
+```bash
+sudo apt update
+sudo apt install cli-music
 ```
 
 ## Run
