@@ -1,6 +1,6 @@
 [project]
 name = "cli-music"
-version = "0.1.4"
+version = "0.1.7"
 description = "A terminal-based music player that searches, streams audio, and supports downloads."
 authors = [
     {name = "bonnie-boni",email = "xanensismo@gmail.com"}

@@ -25,7 +25,7 @@ uv pip install cli-music
 ```
 or
 ```bash
-winget install BonnieBoni.CliMusic
+winget install cli-music
 ```
 or (Debian/Ubuntu after repository setup)
 ```bash

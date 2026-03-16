@@ -25,7 +25,7 @@ _AUTH_READY = False
 
 def detect_browser():
     """Detect browser cookies for authenticated yt-dlp requests."""
-    for browser in ("opera", "edge", "chrome", "brave", "firefox","chromium","safari"):
+    for browser in ("opera", "edge", "chrome", "brave", "firefox","chromium","safariw"):
         try:
             with open(os.devnull, "w", encoding="utf-8") as devnull, redirect_stderr(devnull):
                 with yt_dlp.YoutubeDL(

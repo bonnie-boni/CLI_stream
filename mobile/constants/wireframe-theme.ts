@@ -1,0 +1,15 @@
+export const WireframeTheme = {
+  bg: '#0d0f14',
+  panel: '#161a22',
+  panelElevated: '#1b202b',
+  border: '#2a3040',
+  textPrimary: '#eef2ff',
+  textSecondary: '#9aa4ba',
+  activeBlue: '#2a8cff',
+  activeBlueSoft: '#183b70',
+  accentRed: '#e05657',
+  accentTeal: '#44b9b4',
+  accentYellow: '#f2c24e',
+  playerMetalLight: '#d7dbdf',
+  playerMetalDark: '#aeb6bf',
+};
