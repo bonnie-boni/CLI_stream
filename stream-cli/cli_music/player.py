@@ -1,8 +1,11 @@
 import os
+import pathlib
 import shutil
 import subprocess
 import threading
 import time
+import urllib.request
+import zipfile
 
 import psutil
 
@@ -12,24 +15,140 @@ from .ui import render_player
 
 _ACTIVE_PROC = None
 _ACTIVE_PROC_LOCK = threading.Lock()
+_FFMPEG_RELEASE_URL = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+
+
+def _existing_file(paths):
+    for path in paths:
+        if path and os.path.isfile(path):
+            return path
+    return None
+
+
+def _where_exe(name):
+    """Resolve an executable via where.exe on Windows even when shutil.which misses it."""
+    if os.name != "nt":
+        return None
+
+    try:
+        result = subprocess.run(
+            ["where", name],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except Exception:
+        return None
+
+    if result.returncode != 0:
+        return None
+
+    for line in result.stdout.splitlines():
+        candidate = line.strip()
+        if candidate and os.path.isfile(candidate):
+            return candidate
+    return None
+
+
+def _portable_runtime_dir():
+    """Return app-local runtime tools directory."""
+    if os.name == "nt":
+        base = os.environ.get("LOCALAPPDATA") or os.path.join(os.path.expanduser("~"), "AppData", "Local")
+    else:
+        base = os.path.join(os.path.expanduser("~"), ".local", "share")
+    return os.path.join(base, "cli-music", "runtime")
+
+
+def _extract_first_matching(zip_path, suffix):
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        for member in zf.namelist():
+            if member.lower().endswith(suffix.lower()):
+                dest = os.path.join(_portable_runtime_dir(), os.path.basename(member))
+                pathlib.Path(_portable_runtime_dir()).mkdir(parents=True, exist_ok=True)
+                with zf.open(member) as src, open(dest, "wb") as dst:
+                    shutil.copyfileobj(src, dst)
+                return dest
+    return None
+
+
+def _ensure_portable_ffplay_windows():
+    """Best-effort bootstrap of a portable ffplay.exe for self-contained playback on Windows."""
+    if os.name != "nt":
+        return None
+
+    runtime_dir = _portable_runtime_dir()
+    ffplay_path = os.path.join(runtime_dir, "ffplay.exe")
+    if os.path.isfile(ffplay_path):
+        return ffplay_path
+
+    try:
+        pathlib.Path(runtime_dir).mkdir(parents=True, exist_ok=True)
+        zip_path = os.path.join(runtime_dir, "ffmpeg-release-essentials.zip")
+        with urllib.request.urlopen(_FFMPEG_RELEASE_URL, timeout=45) as response, open(zip_path, "wb") as out:
+            shutil.copyfileobj(response, out)
+
+        extracted = _extract_first_matching(zip_path, "bin/ffplay.exe")
+        try:
+            os.remove(zip_path)
+        except OSError:
+            pass
+        return extracted if extracted and os.path.isfile(extracted) else None
+    except Exception:
+        return None
 
 
 def find_player():
     """Locate supported local player executable."""
     if os.name == "nt":
-        mpv_candidates = [
+        user_profile = os.environ.get("USERPROFILE") or os.path.expanduser("~")
+        local_app_data = os.environ.get("LOCALAPPDATA") or os.path.join(user_profile, "AppData", "Local")
+        program_files = os.environ.get("ProgramFiles", r"C:\Program Files")
+        program_files_x86 = os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")
+        chocolatey = os.environ.get("ChocolateyInstall", r"C:\ProgramData\chocolatey")
+
+        mpv_path = _existing_file([
             shutil.which("mpv"),
+            _where_exe("mpv.exe"),
             r"C:\Users\User\AppData\Local\Microsoft\WindowsApps\mpv.exe",
-            r"C:\Program Files\mpv\mpv.exe",
-            r"C:\Program Files (x86)\mpv\mpv.exe",
-            os.path.expandvars(r"%LOCALAPPDATA%\Programs\mpv\mpv.exe"),
-            os.path.expandvars(r"%LOCALAPPDATA%\mpv\mpv.exe"),
-            os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WindowsApps\mpv.exe"),
-            os.path.expandvars(r"%USERPROFILE%\scoop\apps\mpv\current\mpv.exe"),
-        ]
-        for path in mpv_candidates:
-            if path and os.path.isfile(path):
-                return "mpv", path
+            os.path.join(program_files, "mpv", "mpv.exe"),
+            os.path.join(program_files_x86, "mpv", "mpv.exe"),
+            os.path.join(local_app_data, "Programs", "mpv", "mpv.exe"),
+            os.path.join(local_app_data, "mpv", "mpv.exe"),
+            os.path.join(local_app_data, "Microsoft", "WindowsApps", "mpv.exe"),
+            os.path.join(user_profile, "scoop", "apps", "mpv", "current", "mpv.exe"),
+            os.path.join(chocolatey, "bin", "mpv.exe"),
+        ])
+        if mpv_path:
+            return "mpv", mpv_path
+
+        vlc_path = _existing_file([
+            shutil.which("vlc"),
+            _where_exe("vlc.exe"),
+            os.path.join(program_files, "VideoLAN", "VLC", "vlc.exe"),
+            os.path.join(program_files_x86, "VideoLAN", "VLC", "vlc.exe"),
+            os.path.join(local_app_data, "Programs", "VideoLAN", "VLC", "vlc.exe"),
+            os.path.join(chocolatey, "bin", "vlc.exe"),
+        ])
+        if vlc_path:
+            return "vlc", vlc_path
+
+        ffplay_path = _existing_file([
+            shutil.which("ffplay"),
+            _where_exe("ffplay.exe"),
+            os.path.join(program_files, "ffmpeg", "bin", "ffplay.exe"),
+            os.path.join(program_files_x86, "ffmpeg", "bin", "ffplay.exe"),
+            os.path.join(local_app_data, "Programs", "ffmpeg", "bin", "ffplay.exe"),
+            os.path.join(user_profile, "scoop", "apps", "ffmpeg", "current", "bin", "ffplay.exe"),
+            os.path.join(chocolatey, "bin", "ffplay.exe"),
+            os.path.join(chocolatey, "lib", "ffmpeg", "tools", "ffmpeg", "bin", "ffplay.exe"),
+        ])
+        if ffplay_path:
+            return "ffplay", ffplay_path
+
+        # Self-contained fallback: bootstrap portable ffplay into LocalAppData.
+        portable_ffplay = _ensure_portable_ffplay_windows()
+        if portable_ffplay:
+            return "ffplay", portable_ffplay
 
     for player in ["mpv", "vlc", "ffplay"]:
         path = shutil.which(player)

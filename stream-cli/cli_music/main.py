@@ -27,7 +27,7 @@ def main():
         mode = ask_or_cancel(
             questionary.select(
                 "Choose mode:",
-                choices=["Search Song", "Discover by Genre + Mood", "Play from YouTube URL", "Quit"],
+                choices=["Search Song", "Discover by Genre + Mood", "Play from YouTube URL\n", "Quit"],
             )
         )
 
@@ -133,7 +133,7 @@ def run():
     try:
         main()
     except KeyboardInterrupt:
-        show_closing("Interrupted. Session closed cleanly")
+        show_closing("Bye👋! Session closed cleanly")
 
 
 if __name__ == "__main__":

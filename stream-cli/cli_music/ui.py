@@ -31,7 +31,7 @@ def render_player(
         ratio = 0
 
     filled = int(width * ratio)
-    bar = "#" * filled + "." * (width - filled)
+    bar = "█" * filled + "░" * (width - filled)
 
     state_tag = "  [bold red]PAUSED[/bold red]" if paused else ""
     repeat_tag = "  [bold green]REPEAT[/bold green]" if repeat else ""
@@ -58,7 +58,7 @@ def render_player(
         + "[bold yellow][R][/bold yellow] Repeat  [bold yellow][Space][/bold yellow] Pause\n"
         + "  [bold yellow][L][/bold yellow] Load More  [bold yellow][S][/bold yellow] Search  "
         + "[bold yellow][D][/bold yellow] Download  [bold yellow][D+P][/bold yellow] Queue  "
-        + "[bold yellow][Q][/bold yellow] Quit\n\n"
+        + "[bold red][Q][/bold red] Quit\n\n"
         + "  [bold yellow]Next Song:[/bold yellow]\n"
         + f"  [italic]{next_title or 'None (end of queue)'}[/italic]\n"
     )
@@ -80,21 +80,19 @@ def show_closing(message="Bye, see you next time"):
 def show_welcome():
     """Render the startup banner."""
     headset = (
-        "        [cyan] ===  ||   ====      ===  ||      //\\   |   |  === || / [/cyan]\n"
-        "        [cyan]||    ||    ||      ||==| ||     //_ \\  |___| |==  ||/  [/cyan]\n"
-        "        [cyan] ===  ==== ====     ||     ===  //    \\ |____  === ||   [/cyan]\n\n"
-        "[italic cyan][bold]Tips:[/bold] Search with song and artist for better results.[/italic cyan]\n"
-        "               [cyan]_____________________[/cyan]\n"
-        "               [cyan]|                    |[/cyan]\n"
-        "               [cyan]|[/cyan]  [bold cyan]CLI Music[/bold cyan]      [cyan]|[/cyan]\n"
-        "               [cyan]|____________________|[/cyan]\n"
+        "\n        [cyan] ♩  ██████╗██╗     ██╗    ███╗   ███╗██╗   ██╗███████╗██╗ ██████╗  ♩ [/cyan]\n"
+        "        [cyan] ♪ ██╔════╝██║     ██║    ████╗ ████║██║   ██║██╔════╝██║██╔════╝  ♪ [/cyan]\n"
+        "        [cyan]   ██║     ██║     ██║    ██╔████╔██║██║   ██║███████╗██║██║         [/cyan]\n"
+        "        [cyan] ♫ ██║     ██║     ██║    ██║╚██╔╝██║██║   ██║╚════██║██║██║       ♫ [/cyan]\n"
+        "        [cyan]   ╚██████╗███████╗██║    ██║ ╚═╝ ██║╚██████╔╝███████║██║╚██████╗    [/cyan]\n"
+        "        [cyan] ♬  ╚═════╝╚══════╝╚═╝    ╚═╝     ╚═╝ ╚═════╝ ╚══════╝╚═╝ ╚═════╝ ♬ [/cyan]\n\n"
+        "           [italic cyan][bold]Tips 💡 : [/bold] Search with song and artist for better results.[/italic cyan]\n\n"
     )
 
     console.print(
         Panel(
             headset
-            + "  [cyan]Q[/cyan]=Quit   [cyan]S[/cyan]=Search\n"
-            + "  [cyan]D[/cyan]=Download Song   [cyan]D+P[/cyan]=Download Playlist",
+            + "                      [italic cyan][bold]Created by bonnie-boni.\n              Follow me on GitHub! [/bold] [underline][link]https://github.com/bonnie-boni[/link][/underline]. \n\n",
             title="[bold cyan]CLI Music Player[/bold cyan]",
             border_style="cyan",
             box=box.DOUBLE_EDGE,

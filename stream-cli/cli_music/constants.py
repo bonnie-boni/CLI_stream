@@ -43,9 +43,9 @@ ACTION_QUIT = "quit"
 ACTION_SEARCH = "search"
 ACTION_DOWNLOAD_PLAYLIST = "download_playlist"
 
-LOAD_MORE_CHOICE = " [ Load more Songs ]"
-SEARCH_NEW_QUERY_CHOICE = " [ Search New Query ]"
-QUIT_CHOICE = " [ Quit ]"
+LOAD_MORE_CHOICE = "\nLoad more Songs"
+SEARCH_NEW_QUERY_CHOICE = "Search New Query "
+QUIT_CHOICE = "Quit"
 
 PICK_ACTION_LOAD_MORE = "pick_load_more"
 PICK_ACTION_NEW_QUERY = "pick_new_query"

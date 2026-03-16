@@ -7,7 +7,10 @@ A terminal-based music player that searches and streams audio, and supports down
 - Python 3.10+
 - pip or uv
 - An internet connection
-- One local audio player: mpv, VLC, or ffplay
+- Optional local audio player: mpv, VLC, or ffplay
+
+On Windows, if no player is found, CLI Music will automatically bootstrap a
+portable `ffplay.exe` backend into your local app runtime folder.
 
 ## Install
 
