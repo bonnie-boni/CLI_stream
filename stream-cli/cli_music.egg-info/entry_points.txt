@@ -1,2 +1,3 @@
 [console_scripts]
 cli-music = cli_music.main:run
+cli-music-api = cli_music.api:cli

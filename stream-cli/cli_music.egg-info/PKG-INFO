@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: cli-music
-Version: 0.1.4
+Version: 0.1.7
 Summary: A terminal-based music player that searches, streams audio, and supports downloads.
 Author-email: bonnie-boni <xanensismo@gmail.com>
 Requires-Python: >=3.12
@@ -12,6 +12,8 @@ Requires-Dist: rich
 Requires-Dist: questionary
 Requires-Dist: typer
 Requires-Dist: psutil
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
 
 # CLI Music Player
 
@@ -40,7 +42,7 @@ uv pip install cli-music
 ```
 or
 ```bash
-winget install BonnieBoni.CliMusic
+winget install cli-music
 ```
 or (Debian/Ubuntu after repository setup)
 ```bash
@@ -96,3 +98,28 @@ pip install --upgrade cli-music
 ## Downloads
 
 - Song downloads are stored in the `Downloads/music/` directory.
+
+## API for Mobile App
+
+You can run the CLI Music backend as an HTTP API for the React Native app.
+
+Start the API server:
+
+```bash
+cli-music-api --host 0.0.0.0 --port 8765
+```
+
+Available endpoints:
+
+- `GET /health`
+- `GET /songs/search?q=<query>&limit=25`
+- `POST /songs/download` with JSON body:
+   - `id` (optional)
+   - `title`
+   - `webpage_url`
+
+For physical devices, set `EXPO_PUBLIC_API_BASE_URL` in the mobile app to your PC IP, for example:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=http://192.168.1.20:8765
+```

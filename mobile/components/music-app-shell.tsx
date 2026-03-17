@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   webFrame: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: WireframeTheme.border,
+    borderColor: 'rgba(255,255,255,0)',
     overflow: 'hidden',
   },
 });

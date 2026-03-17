@@ -133,6 +133,7 @@ def normalize_url_entry(entry):
         "id": entry.get("id"),
         "title": entry.get("title") or "Unknown",
         "duration": entry.get("duration") or 0,
+        "thumbnail": entry.get("thumbnail") or "",
         "upload_date": entry.get("upload_date") or "",
         "webpage_url": video_url,
         "artist": entry.get("artist") or "",

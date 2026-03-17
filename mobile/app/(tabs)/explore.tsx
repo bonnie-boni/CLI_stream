@@ -1,6 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   ImageBackground,
   Pressable,
@@ -13,125 +14,175 @@ import {
 
 import { MusicAppShell } from '@/components/music-app-shell';
 import { WireframeTheme } from '@/constants/wireframe-theme';
+import { downloadSong, searchSongs, type SongDto } from '@/services/music-api';
 
-type Song = {
-  id: string;
-  title: string;
-  artist: string;
-  duration: string;
-  thumbnail: string;
-};
+const FALLBACK_THUMB =
+  'https://images.unsplash.com/photo-1507838153414-b4b713384a76?auto=format&fit=crop&w=900&q=80';
 
-const queue: Song[] = [
-  {
-    id: '1',
-    title: 'Blinding Lights',
-    artist: 'The Weeknd',
-    duration: '3:20',
-    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/95/65/22/9565227f-ac53-ec92-f2de-a28ea22f69f3/20UMGIM15598.rgb.jpg/600x600bb.jpg',
-  },
-  {
-    id: '2',
-    title: 'Levitating',
-    artist: 'Dua Lipa',
-    duration: '3:24',
-    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/d7/ac/6a/d7ac6aca-da6b-afcc-2a2c-3f6f6f6d4aa4/190295132410.jpg/600x600bb.jpg',
-  },
-  {
-    id: '3',
-    title: 'Calm Down',
-    artist: 'Rema, Selena Gomez',
-    duration: '3:59',
-    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/da/5c/0f/da5c0fe4-a5cc-e7ea-d035-84f06f93ca3e/886449968442.jpg/600x600bb.jpg',
-  },
-];
+function withFallbackThumb(url: string) {
+  return url?.trim() ? url : FALLBACK_THUMB;
+}
+
+function formatDuration(seconds: number) {
+  const total = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
 
 export default function PlayerScreen() {
-  const [activeId, setActiveId] = useState(queue[0].id);
+  const [queue, setQueue] = useState<SongDto[]>([]);
+  const [activeId, setActiveId] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isDownloading, setIsDownloading] = useState(false);
   const { width } = useWindowDimensions();
 
-  const activeSong = queue.find((song) => song.id === activeId) ?? queue[0];
+  useEffect(() => {
+    const loadQueue = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+        const songs = await searchSongs('new music 2026', 20);
+        const normalized = songs.map((song) => ({ ...song, thumbnail: withFallbackThumb(song.thumbnail) }));
+        setQueue(normalized);
+        if (normalized.length > 0) {
+          setActiveId(normalized[0].id);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load queue');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadQueue();
+  }, []);
+
+  const activeSong = useMemo(() => {
+    return queue.find((song) => song.id === activeId) ?? queue[0];
+  }, [queue, activeId]);
+
   const isTablet = width >= 760;
   const isDesktop = width >= 1100;
 
+  const onDownloadActive = async () => {
+    if (!activeSong) {
+      return;
+    }
+
+    try {
+      setIsDownloading(true);
+      await downloadSong(activeSong);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Download failed');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <MusicAppShell>
-      <ImageBackground source={{ uri: activeSong.thumbnail }} style={styles.playerCard} imageStyle={styles.playerCardImage}>
+      <ImageBackground
+        source={{ uri: activeSong?.thumbnail || FALLBACK_THUMB }}
+        style={styles.playerCard}
+        imageStyle={styles.playerCardImage}>
         <View style={styles.playerOverlay} />
 
         <View style={styles.headerRow}>
           <Text style={styles.nowPlaying}>NOW PLAYING</Text>
           <View style={styles.headerIcons}>
-            <MaterialIcons name="favorite-border" size={20} color={WireframeTheme.textPrimary} />
+            <Pressable onPress={onDownloadActive} hitSlop={8}>
+              {isDownloading ? (
+                <ActivityIndicator size="small" color={WireframeTheme.textPrimary} />
+              ) : (
+                <MaterialIcons name="download" size={20} color={WireframeTheme.textPrimary} />
+              )}
+            </Pressable>
             <MaterialIcons name="more-horiz" size={20} color={WireframeTheme.textPrimary} />
           </View>
         </View>
 
-        <View style={[styles.mainBody, isTablet ? styles.mainBodyTablet : null]}>
-          <View style={[styles.artPanel, isDesktop ? styles.artPanelDesktop : null]}>
-            <Image source={{ uri: activeSong.thumbnail }} style={styles.coverArt} />
-            <Text numberOfLines={1} style={styles.songTitle}>
-              {activeSong.title}
-            </Text>
-            <Text numberOfLines={1} style={styles.songArtist}>
-              {activeSong.artist}
-            </Text>
-          </View>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-          <View style={[styles.controlsPanel, isDesktop ? styles.controlsPanelDesktop : null]}>
-            <View style={styles.sliderRow}>
-              <Text style={styles.timeText}>1:34</Text>
-              <View style={styles.sliderTrack}>
-                <View style={styles.sliderProgress} />
-                <View style={styles.sliderThumb} />
+        {isLoading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="small" color={WireframeTheme.textPrimary} />
+            <Text style={styles.loadingText}>Loading queue...</Text>
+          </View>
+        ) : (
+          <View style={[styles.mainBody, isTablet ? styles.mainBodyTablet : null]}>
+            <View style={[styles.artPanel, isDesktop ? styles.artPanelDesktop : null]}>
+              {activeSong ? (
+                <>
+                  <Image source={{ uri: activeSong.thumbnail }} style={styles.coverArt} />
+                  <Text numberOfLines={1} style={styles.songTitle}>
+                    {activeSong.title}
+                  </Text>
+                  <Text numberOfLines={1} style={styles.songArtist}>
+                    {activeSong.artist}
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.loadingText}>No songs in queue</Text>
+              )}
+            </View>
+
+            <View style={[styles.controlsPanel, isDesktop ? styles.controlsPanelDesktop : null]}>
+              <View style={styles.sliderRow}>
+                <Text style={styles.timeText}>1:34</Text>
+                <View style={styles.sliderTrack}>
+                  <View style={styles.sliderProgress} />
+                  <View style={styles.sliderThumb} />
+                </View>
+                <Text style={styles.timeText}>{activeSong ? formatDuration(activeSong.duration) : '0:00'}</Text>
               </View>
-              <Text style={styles.timeText}>{activeSong.duration}</Text>
+
+              <View style={[styles.controlsRow, isTablet ? styles.controlsRowTablet : null]}>
+                <Pressable style={styles.controlButton}>
+                  <MaterialIcons name="shuffle" size={22} color={WireframeTheme.textPrimary} />
+                </Pressable>
+                <Pressable style={styles.controlButton}>
+                  <MaterialIcons name="skip-previous" size={24} color={WireframeTheme.textPrimary} />
+                </Pressable>
+                <Pressable style={styles.playButton}>
+                  <MaterialIcons name="pause" size={30} color={WireframeTheme.textPrimary} />
+                </Pressable>
+                <Pressable style={styles.controlButton}>
+                  <MaterialIcons name="skip-next" size={24} color={WireframeTheme.textPrimary} />
+                </Pressable>
+                <Pressable style={styles.controlButton}>
+                  <MaterialIcons name="repeat" size={22} color={WireframeTheme.textPrimary} />
+                </Pressable>
+              </View>
+
+              <Text style={styles.queueLabel}>UP NEXT</Text>
+              <ScrollView style={styles.queueList} contentContainerStyle={styles.queueListContent}>
+                {queue.map((song) => {
+                  const isActive = song.id === activeSong?.id;
+
+                  return (
+                    <Pressable
+                      key={song.id}
+                      style={[styles.queueItem, isActive ? styles.queueItemActive : null]}
+                      onPress={() => setActiveId(song.id)}>
+                      <Image source={{ uri: song.thumbnail }} style={styles.queueThumb} />
+                      <View style={styles.queueTextWrap}>
+                        <Text numberOfLines={1} style={styles.queueTitle}>
+                          {song.title}
+                        </Text>
+                        <Text numberOfLines={1} style={styles.queueArtist}>
+                          {song.artist}
+                        </Text>
+                      </View>
+                      <Text style={styles.queueDuration}>{formatDuration(song.duration)}</Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
             </View>
-
-            <View style={[styles.controlsRow, isTablet ? styles.controlsRowTablet : null]}>
-              <Pressable style={styles.controlButton}>
-                <MaterialIcons name="shuffle" size={22} color={WireframeTheme.textPrimary} />
-              </Pressable>
-              <Pressable style={styles.controlButton}>
-                <MaterialIcons name="skip-previous" size={24} color={WireframeTheme.textPrimary} />
-              </Pressable>
-              <Pressable style={styles.playButton}>
-                <MaterialIcons name="pause" size={30} color={WireframeTheme.textPrimary} />
-              </Pressable>
-              <Pressable style={styles.controlButton}>
-                <MaterialIcons name="skip-next" size={24} color={WireframeTheme.textPrimary} />
-              </Pressable>
-              <Pressable style={styles.controlButton}>
-                <MaterialIcons name="repeat" size={22} color={WireframeTheme.textPrimary} />
-              </Pressable>
-            </View>
-
-            <Text style={styles.queueLabel}>UP NEXT</Text>
-            <ScrollView style={styles.queueList} contentContainerStyle={styles.queueListContent}>
-              {queue.map((song) => {
-                const isActive = song.id === activeSong.id;
-
-                return (
-                  <Pressable
-                    key={song.id}
-                    style={[styles.queueItem, isActive ? styles.queueItemActive : null]}
-                    onPress={() => setActiveId(song.id)}>
-                    <Image source={{ uri: song.thumbnail }} style={styles.queueThumb} />
-                    <View style={styles.queueTextWrap}>
-                      <Text numberOfLines={1} style={styles.queueTitle}>
-                        {song.title}
-                      </Text>
-                      <Text numberOfLines={1} style={styles.queueArtist}>
-                        {song.artist}
-                      </Text>
-                    </View>
-                    <Text style={styles.queueDuration}>{song.duration}</Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
           </View>
-        </View>
+        )}
       </ImageBackground>
     </MusicAppShell>
   );
@@ -169,7 +220,24 @@ const styles = StyleSheet.create({
   headerIcons: {
     marginLeft: 'auto',
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
+  },
+  errorText: {
+    zIndex: 2,
+    color: '#ffd0d0',
+    fontSize: 12,
+    marginTop: 6,
+  },
+  loadingWrap: {
+    zIndex: 2,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  loadingText: {
+    color: WireframeTheme.textSecondary,
   },
   mainBody: {
     zIndex: 2,

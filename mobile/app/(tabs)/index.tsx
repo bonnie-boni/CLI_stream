@@ -1,6 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   ImageBackground,
@@ -14,101 +15,95 @@ import {
 
 import { MusicAppShell } from '@/components/music-app-shell';
 import { WireframeTheme } from '@/constants/wireframe-theme';
+import { downloadSong, searchSongs, type SongDto } from '@/services/music-api';
 
-type Song = {
-  id: string;
-  title: string;
-  artist: string;
-  duration: string;
-  thumbnail: string;
-};
+type Song = SongDto & { durationLabel: string };
 
-const songs: Song[] = [
-  {
-    id: '1',
-    title: 'Blinding Lights',
-    artist: 'The Weeknd',
-    duration: '3:20',
-    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/95/65/22/9565227f-ac53-ec92-f2de-a28ea22f69f3/20UMGIM15598.rgb.jpg/600x600bb.jpg',
-  },
-  {
-    id: '2',
-    title: 'Levitating',
-    artist: 'Dua Lipa',
-    duration: '3:24',
-    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/d7/ac/6a/d7ac6aca-da6b-afcc-2a2c-3f6f6f6d4aa4/190295132410.jpg/600x600bb.jpg',
-  },
-  {
-    id: '3',
-    title: 'As It Was',
-    artist: 'Harry Styles',
-    duration: '2:47',
-    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/bf/45/25/bf4525ac-7864-f815-313d-f5ea63144ea9/886449990061.jpg/600x600bb.jpg',
-  },
-  {
-    id: '4',
-    title: 'Calm Down',
-    artist: 'Rema, Selena Gomez',
-    duration: '3:59',
-    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/da/5c/0f/da5c0fe4-a5cc-e7ea-d035-84f06f93ca3e/886449968442.jpg/600x600bb.jpg',
-  },
-  {
-    id: '5',
-    title: 'Golden Hour',
-    artist: 'JVKE',
-    duration: '3:29',
-    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/7f/26/32/7f263210-f0af-080b-26e4-7ff42eb95f4f/196922005662_Cover.jpg/600x600bb.jpg',
-  },
-  {
-    id: '6',
-    title: 'Die For You',
-    artist: 'The Weeknd',
-    duration: '4:20',
-    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/e5/27/18/e5271854-e8b0-44f6-f820-f5a364f5754c/15UMGIM24224.rgb.jpg/600x600bb.jpg',
-  },
-];
+const FALLBACK_THUMB =
+  'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=900&q=80';
+
+function formatDuration(seconds: number) {
+  const total = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function withFallbackThumb(url: string) {
+  return url?.trim() ? url : FALLBACK_THUMB;
+}
 
 export default function TracksScreen() {
-  const [query, setQuery] = useState('');
-  const [selectedSongId, setSelectedSongId] = useState(songs[0].id);
+  const [query, setQuery] = useState('Moji ShortBaba - songs');
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [selectedSongId, setSelectedSongId] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [downloadingId, setDownloadingId] = useState('');
   const { width } = useWindowDimensions();
 
   const columns = width >= 1220 ? 3 : width >= 780 ? 2 : 1;
-  const isWide = width >= 900;
 
-  const filteredSongs = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) {
-      return songs;
-    }
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      try {
+        setIsLoading(true);
+        setError('');
 
-    return songs.filter((song) => {
-      return (
-        song.title.toLowerCase().includes(normalized) ||
-        song.artist.toLowerCase().includes(normalized)
-      );
-    });
+        const results = await searchSongs(query || 'Moji ShortBaba', 30);
+        const mapped = results.map((song) => ({
+          ...song,
+          thumbnail: withFallbackThumb(song.thumbnail),
+          durationLabel: formatDuration(song.duration),
+        }));
+
+        setSongs(mapped);
+        if (mapped.length > 0) {
+          setSelectedSongId((prev) => prev || mapped[0].id);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load songs');
+      } finally {
+        setIsLoading(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timeout);
   }, [query]);
 
-  const selectedSong =
-    filteredSongs.find((song) => song.id === selectedSongId) ?? filteredSongs[0] ?? songs[0];
+  const selectedSong = useMemo(() => {
+    return songs.find((song) => song.id === selectedSongId) ?? songs[0];
+  }, [songs, selectedSongId]);
+
+  const heroThumb = selectedSong?.thumbnail || FALLBACK_THUMB;
+
+  const onDownload = async (song: Song) => {
+    try {
+      setDownloadingId(song.id);
+      await downloadSong(song);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Download failed');
+    } finally {
+      setDownloadingId('');
+    }
+  };
 
   return (
     <MusicAppShell>
-      <ImageBackground source={{ uri: selectedSong.thumbnail }} style={styles.hero} imageStyle={styles.heroImage}>
+      <ImageBackground source={{ uri: heroThumb }} style={styles.hero} imageStyle={styles.heroImage}>
         <View style={styles.heroOverlay} />
         <View style={styles.heroTopRow}>
-          <Text style={styles.heroLabel}>SMART DISCOVERY</Text>
+          <Text style={styles.heroLabel}>LIVE FROM CLI_MUSIC</Text>
           <View style={styles.liveBadge}>
-            <MaterialIcons name="multitrack-audio" size={14} color={WireframeTheme.textPrimary} />
-            <Text style={styles.liveBadgeText}>Live Search</Text>
+            <MaterialIcons name="cloud-done" size={14} color={WireframeTheme.textPrimary} />
+            <Text style={styles.liveBadgeText}>Synced</Text>
           </View>
         </View>
         <Text numberOfLines={1} style={styles.heroTitle}>
-          Search. Preview. Play.
+          Search. Play. Download.
         </Text>
         <Text numberOfLines={2} style={styles.heroSubtitle}>
-          Explore audio with visual thumbnails and switch seamlessly from search to playback.
+          Search for your favorite songs, download them directly to your device, and enjoy seamless playback—all in one app.
         </Text>
       </ImageBackground>
 
@@ -121,72 +116,80 @@ export default function TracksScreen() {
           onChangeText={setQuery}
           style={styles.searchInput}
         />
-        {!!query && (
-          <Pressable onPress={() => setQuery('')} hitSlop={8}>
-            <MaterialIcons name="close" size={20} color={WireframeTheme.textSecondary} />
-          </Pressable>
-        )}
       </View>
+
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <View style={styles.sectionHead}>
         <Text style={styles.sectionTitle}>Search Results</Text>
-        <Text style={styles.sectionMeta}>{filteredSongs.length} tracks</Text>
+        <Text style={styles.sectionMeta}>{songs.length} tracks</Text>
       </View>
 
-      <FlatList
-        data={filteredSongs}
-        key={`tracks-${columns}`}
-        keyExtractor={(item) => item.id}
-        numColumns={columns}
-        columnWrapperStyle={columns > 1 ? styles.gridRow : undefined}
-        contentContainerStyle={[styles.listContent, isWide ? styles.listWideContent : null]}
-        renderItem={({ item }) => {
-          const isActive = item.id === selectedSong.id;
-
-          return (
-            <Pressable
-              style={[styles.card, columns > 1 ? styles.cardGrid : null, isActive ? styles.cardActive : null]}
-              onPress={() => setSelectedSongId(item.id)}>
-              <Image source={{ uri: item.thumbnail }} style={styles.cardBackground} resizeMode="cover" />
-              <View style={styles.cardOverlay} />
-              <Image source={{ uri: item.thumbnail }} style={styles.coverArt} />
-              <View style={styles.cardTextWrap}>
-                <Text numberOfLines={1} style={styles.songTitle}>
-                  {item.title}
-                </Text>
-                <Text numberOfLines={1} style={styles.songArtist}>
-                  {item.artist}
-                </Text>
-              </View>
-              <Text style={styles.songDuration}>{item.duration}</Text>
-              <MaterialIcons
-                name={isActive ? 'pause-circle-filled' : 'play-circle-filled'}
-                size={26}
-                color={WireframeTheme.textPrimary}
-              />
-            </Pressable>
-          );
-        }}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No matching tracks found.</Text>
-            <Text style={styles.emptySubtitle}>Try another keyword or artist name.</Text>
-          </View>
-        }
-      />
-
-      <View style={styles.miniPlayer}>
-        <Image source={{ uri: selectedSong.thumbnail }} style={styles.miniCover} />
-        <View style={styles.cardTextWrap}>
-          <Text numberOfLines={1} style={styles.songTitle}>
-            {selectedSong.title}
-          </Text>
-          <Text numberOfLines={1} style={styles.songArtist}>
-            {selectedSong.artist}
-          </Text>
+      {isLoading ? (
+        <View style={styles.centeredState}>
+          <ActivityIndicator size="small" color={WireframeTheme.textPrimary} />
+          <Text style={styles.stateText}>Fetching songs...</Text>
         </View>
-        <MaterialIcons name="play-arrow" size={26} color={WireframeTheme.textPrimary} />
-      </View>
+      ) : (
+        <FlatList
+          data={songs}
+          key={`tracks-${columns}`}
+          keyExtractor={(item) => item.id}
+          numColumns={columns}
+          columnWrapperStyle={columns > 1 ? styles.gridRow : undefined}
+          contentContainerStyle={styles.listContent}
+          renderItem={({ item }) => {
+            const isActive = item.id === selectedSong?.id;
+            const isDownloading = downloadingId === item.id;
+
+            return (
+              <Pressable
+                style={[styles.card, columns > 1 ? styles.cardGrid : null, isActive ? styles.cardActive : null]}
+                onPress={() => setSelectedSongId(item.id)}>
+                <Image source={{ uri: item.thumbnail }} style={styles.cardBackground} resizeMode="cover" />
+                <View style={styles.cardOverlay} />
+                <Image source={{ uri: item.thumbnail }} style={styles.coverArt} />
+                <View style={styles.cardTextWrap}>
+                  <Text numberOfLines={1} style={styles.songTitle}>
+                    {item.title}
+                  </Text>
+                  <Text numberOfLines={1} style={styles.songArtist}>
+                    {item.artist}
+                  </Text>
+                </View>
+                <Text style={styles.songDuration}>{item.durationLabel}</Text>
+                <Pressable onPress={() => onDownload(item)} hitSlop={8}>
+                  {isDownloading ? (
+                    <ActivityIndicator size="small" color={WireframeTheme.textPrimary} />
+                  ) : (
+                    <MaterialIcons name="download" size={22} color={WireframeTheme.textPrimary} />
+                  )}
+                </Pressable>
+              </Pressable>
+            );
+          }}
+          ListEmptyComponent={
+            <View style={styles.centeredState}>
+              <Text style={styles.stateText}>No matching tracks found.</Text>
+            </View>
+          }
+        />
+      )}
+
+      {!!selectedSong && (
+        <View style={styles.miniPlayer}>
+          <Image source={{ uri: selectedSong.thumbnail }} style={styles.miniCover} />
+          <View style={styles.cardTextWrap}>
+            <Text numberOfLines={1} style={styles.songTitle}>
+              {selectedSong.title}
+            </Text>
+            <Text numberOfLines={1} style={styles.songArtist}>
+              {selectedSong.artist}
+            </Text>
+          </View>
+          <MaterialIcons name="play-arrow" size={26} color={WireframeTheme.textPrimary} />
+        </View>
+      )}
     </MusicAppShell>
   );
 }
@@ -260,12 +263,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 14,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   searchInput: {
     color: WireframeTheme.textPrimary,
     flex: 1,
     fontSize: 15,
+  },
+  errorText: {
+    color: '#ffd0d0',
+    fontSize: 12,
+    marginBottom: 8,
   },
   sectionHead: {
     flexDirection: 'row',
@@ -284,12 +292,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  centeredState: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    gap: 8,
+  },
+  stateText: {
+    color: WireframeTheme.textSecondary,
+    fontSize: 12,
+  },
   listContent: {
     paddingBottom: 14,
     gap: 10,
-  },
-  listWideContent: {
-    paddingBottom: 20,
   },
   gridRow: {
     gap: 10,
@@ -361,17 +375,5 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-  },
-  emptyState: {
-    paddingVertical: 30,
-    alignItems: 'center',
-  },
-  emptyTitle: {
-    color: WireframeTheme.textPrimary,
-    fontWeight: '700',
-  },
-  emptySubtitle: {
-    marginTop: 4,
-    color: WireframeTheme.textSecondary,
   },
 });

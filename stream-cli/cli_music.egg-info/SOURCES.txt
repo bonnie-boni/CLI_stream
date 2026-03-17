@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 cli_music/__init__.py
+cli_music/api.py
 cli_music/auth.py
 cli_music/constants.py
 cli_music/downloads.py

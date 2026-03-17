@@ -81,3 +81,28 @@ pip install --upgrade cli-music
 ## Downloads
 
 - Song downloads are stored in the `Downloads/music/` directory.
+
+## API for Mobile App
+
+You can run the CLI Music backend as an HTTP API for the React Native app.
+
+Start the API server:
+
+```bash
+cli-music-api --host 0.0.0.0 --port 8765
+```
+
+Available endpoints:
+
+- `GET /health`
+- `GET /songs/search?q=<query>&limit=25`
+- `POST /songs/download` with JSON body:
+   - `id` (optional)
+   - `title`
+   - `webpage_url`
+
+For physical devices, set `EXPO_PUBLIC_API_BASE_URL` in the mobile app to your PC IP, for example:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=http://192.168.1.20:8765
+```

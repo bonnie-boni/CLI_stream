@@ -14,11 +14,14 @@ dependencies = [
     "rich",
     "questionary",
     "typer",
-    "psutil"
+    "psutil",
+    "fastapi",
+    "uvicorn"
 ]
 
 [project.scripts]
 cli-music = "cli_music.main:run"
+cli-music-api = "cli_music.api:cli"
 
 [tool.setuptools]
 packages = ["cli_music"]
