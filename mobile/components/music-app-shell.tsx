@@ -11,8 +11,11 @@ type MusicAppShellProps = PropsWithChildren<{
 export function MusicAppShell({ children, padded = true }: MusicAppShellProps) {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
-  const maxPhoneWidth = 430;
-  const frameWidth = isWeb ? Math.min(maxPhoneWidth, Math.max(360, width - 32)) : width;
+  const isTablet = width >= 768;
+  const isDesktop = width >= 1100;
+  const frameWidth = isWeb ? Math.min(1280, Math.max(360, width - 40)) : width;
+  const horizontalPadding = padded ? (isDesktop ? 30 : isTablet ? 22 : 14) : 0;
+  const verticalPadding = padded ? (isDesktop ? 20 : 10) : 0;
 
   return (
     <SafeAreaView style={styles.root}>
@@ -22,7 +25,11 @@ export function MusicAppShell({ children, padded = true }: MusicAppShellProps) {
             styles.frame,
             { width: frameWidth },
             isWeb ? styles.webFrame : null,
-            padded ? styles.padded : null,
+            {
+              paddingHorizontal: horizontalPadding,
+              paddingTop: verticalPadding,
+              paddingBottom: verticalPadding,
+            },
           ]}>
           {children}
         </View>
@@ -41,6 +48,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: WireframeTheme.bg,
+    paddingHorizontal: 8,
   },
   frame: {
     flex: 1,
@@ -51,10 +59,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: WireframeTheme.border,
     overflow: 'hidden',
-  },
-  padded: {
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 8,
   },
 });

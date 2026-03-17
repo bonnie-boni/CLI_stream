@@ -14,7 +14,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: '#11151d',
+          backgroundColor: '#0a1f3e',
           borderTopColor: WireframeTheme.border,
           height: 66,
           paddingBottom: 8,

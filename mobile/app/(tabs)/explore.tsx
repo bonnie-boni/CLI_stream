@@ -1,59 +1,138 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import {
+  Image,
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 import { MusicAppShell } from '@/components/music-app-shell';
 import { WireframeTheme } from '@/constants/wireframe-theme';
 
-const controls = ['shuffle', 'skip-previous', 'pause', 'skip-next', 'repeat'];
+type Song = {
+  id: string;
+  title: string;
+  artist: string;
+  duration: string;
+  thumbnail: string;
+};
+
+const queue: Song[] = [
+  {
+    id: '1',
+    title: 'Blinding Lights',
+    artist: 'The Weeknd',
+    duration: '3:20',
+    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/95/65/22/9565227f-ac53-ec92-f2de-a28ea22f69f3/20UMGIM15598.rgb.jpg/600x600bb.jpg',
+  },
+  {
+    id: '2',
+    title: 'Levitating',
+    artist: 'Dua Lipa',
+    duration: '3:24',
+    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/d7/ac/6a/d7ac6aca-da6b-afcc-2a2c-3f6f6f6d4aa4/190295132410.jpg/600x600bb.jpg',
+  },
+  {
+    id: '3',
+    title: 'Calm Down',
+    artist: 'Rema, Selena Gomez',
+    duration: '3:59',
+    thumbnail: 'https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/da/5c/0f/da5c0fe4-a5cc-e7ea-d035-84f06f93ca3e/886449968442.jpg/600x600bb.jpg',
+  },
+];
 
 export default function PlayerScreen() {
+  const [activeId, setActiveId] = useState(queue[0].id);
+  const { width } = useWindowDimensions();
+
+  const activeSong = queue.find((song) => song.id === activeId) ?? queue[0];
+  const isTablet = width >= 760;
+  const isDesktop = width >= 1100;
+
   return (
     <MusicAppShell>
-      <View style={styles.playerCard}>
+      <ImageBackground source={{ uri: activeSong.thumbnail }} style={styles.playerCard} imageStyle={styles.playerCardImage}>
+        <View style={styles.playerOverlay} />
+
         <View style={styles.headerRow}>
-          <MaterialIcons name="keyboard-arrow-down" size={22} color="#2c313a" />
-          <View style={styles.headerRight}>
-            <MaterialIcons name="favorite-border" size={20} color="#2c313a" />
-            <MaterialIcons name="more-horiz" size={20} color="#2c313a" />
+          <Text style={styles.nowPlaying}>NOW PLAYING</Text>
+          <View style={styles.headerIcons}>
+            <MaterialIcons name="favorite-border" size={20} color={WireframeTheme.textPrimary} />
+            <MaterialIcons name="more-horiz" size={20} color={WireframeTheme.textPrimary} />
           </View>
         </View>
 
-        <Text style={styles.offlineText}>OFFLINE MUSIC</Text>
-        <Text style={styles.speedText}>SL 1.20/MPH</Text>
+        <View style={[styles.mainBody, isTablet ? styles.mainBodyTablet : null]}>
+          <View style={[styles.artPanel, isDesktop ? styles.artPanelDesktop : null]}>
+            <Image source={{ uri: activeSong.thumbnail }} style={styles.coverArt} />
+            <Text numberOfLines={1} style={styles.songTitle}>
+              {activeSong.title}
+            </Text>
+            <Text numberOfLines={1} style={styles.songArtist}>
+              {activeSong.artist}
+            </Text>
+          </View>
 
-        <View style={styles.turntableWrap}>
-          <View style={styles.vinylOuter}>
-            <View style={styles.vinylMid}>
-              <View style={styles.vinylInner}>
-                <Text style={styles.vinylLabel}>ALBUM</Text>
+          <View style={[styles.controlsPanel, isDesktop ? styles.controlsPanelDesktop : null]}>
+            <View style={styles.sliderRow}>
+              <Text style={styles.timeText}>1:34</Text>
+              <View style={styles.sliderTrack}>
+                <View style={styles.sliderProgress} />
+                <View style={styles.sliderThumb} />
               </View>
+              <Text style={styles.timeText}>{activeSong.duration}</Text>
             </View>
-          </View>
-          <View style={styles.arm} />
-        </View>
 
-        <Text numberOfLines={1} style={styles.songTitle}>
-          Easy On Me (Official Video)
-        </Text>
-        <Text style={styles.artist}>Acid Ghost</Text>
-
-        <View style={styles.sliderRow}>
-          <Text style={styles.timeText}>1:34</Text>
-          <View style={styles.sliderTrack}>
-            <View style={styles.sliderProgress} />
-            <View style={styles.sliderThumb} />
-          </View>
-          <Text style={styles.timeText}>5:02</Text>
-        </View>
-
-        <View style={styles.controlsRow}>
-          {controls.map((name, idx) => (
-            <View key={name} style={[styles.controlButton, idx === 2 && styles.playButton]}>
-              <MaterialIcons name={name as keyof typeof MaterialIcons.glyphMap} size={20} color="#f4f8ff" />
+            <View style={[styles.controlsRow, isTablet ? styles.controlsRowTablet : null]}>
+              <Pressable style={styles.controlButton}>
+                <MaterialIcons name="shuffle" size={22} color={WireframeTheme.textPrimary} />
+              </Pressable>
+              <Pressable style={styles.controlButton}>
+                <MaterialIcons name="skip-previous" size={24} color={WireframeTheme.textPrimary} />
+              </Pressable>
+              <Pressable style={styles.playButton}>
+                <MaterialIcons name="pause" size={30} color={WireframeTheme.textPrimary} />
+              </Pressable>
+              <Pressable style={styles.controlButton}>
+                <MaterialIcons name="skip-next" size={24} color={WireframeTheme.textPrimary} />
+              </Pressable>
+              <Pressable style={styles.controlButton}>
+                <MaterialIcons name="repeat" size={22} color={WireframeTheme.textPrimary} />
+              </Pressable>
             </View>
-          ))}
+
+            <Text style={styles.queueLabel}>UP NEXT</Text>
+            <ScrollView style={styles.queueList} contentContainerStyle={styles.queueListContent}>
+              {queue.map((song) => {
+                const isActive = song.id === activeSong.id;
+
+                return (
+                  <Pressable
+                    key={song.id}
+                    style={[styles.queueItem, isActive ? styles.queueItemActive : null]}
+                    onPress={() => setActiveId(song.id)}>
+                    <Image source={{ uri: song.thumbnail }} style={styles.queueThumb} />
+                    <View style={styles.queueTextWrap}>
+                      <Text numberOfLines={1} style={styles.queueTitle}>
+                        {song.title}
+                      </Text>
+                      <Text numberOfLines={1} style={styles.queueArtist}>
+                        {song.artist}
+                      </Text>
+                    </View>
+                    <Text style={styles.queueDuration}>{song.duration}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
         </View>
-      </View>
+      </ImageBackground>
     </MusicAppShell>
   );
 }
@@ -61,144 +140,197 @@ export default function PlayerScreen() {
 const styles = StyleSheet.create({
   playerCard: {
     flex: 1,
-    borderRadius: 18,
+    borderRadius: 24,
     overflow: 'hidden',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 20,
-    backgroundColor: WireframeTheme.playerMetalLight,
     borderWidth: 1,
-    borderColor: WireframeTheme.playerMetalDark,
+    borderColor: WireframeTheme.border,
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 12,
+  },
+  playerCardImage: {
+    opacity: 0.45,
+  },
+  playerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(5, 18, 36, 0.72)',
   },
   headerRow: {
+    zIndex: 2,
     flexDirection: 'row',
     alignItems: 'center',
   },
-  headerRight: {
+  nowPlaying: {
+    color: WireframeTheme.textPrimary,
+    letterSpacing: 1,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  headerIcons: {
     marginLeft: 'auto',
     flexDirection: 'row',
+    gap: 12,
+  },
+  mainBody: {
+    zIndex: 2,
+    flex: 1,
+    marginTop: 14,
+    gap: 14,
+  },
+  mainBodyTablet: {
+    flexDirection: 'row',
+  },
+  artPanel: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.24)',
+    backgroundColor: 'rgba(9, 31, 58, 0.52)',
+    padding: 12,
     alignItems: 'center',
-    gap: 10,
   },
-  offlineText: {
-    color: '#1f232b',
-    fontWeight: '700',
-    marginTop: 6,
-    letterSpacing: 0.6,
-  },
-  speedText: {
-    color: '#6e7481',
-    fontSize: 11,
-    marginTop: 2,
-    marginBottom: 10,
-  },
-  turntableWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 8,
-    minHeight: 240,
-  },
-  vinylOuter: {
-    width: 242,
-    height: 242,
-    borderRadius: 121,
-    backgroundColor: '#16181d',
-    alignItems: 'center',
+  artPanelDesktop: {
+    flex: 1,
     justifyContent: 'center',
   },
-  vinylMid: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 6,
-    borderColor: '#2d313a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vinylInner: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    backgroundColor: '#263141',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vinylLabel: {
-    color: '#c5d1e4',
-    fontWeight: '700',
-    letterSpacing: 1,
-    fontSize: 11,
-  },
-  arm: {
-    position: 'absolute',
-    right: 24,
-    top: 28,
-    width: 80,
-    height: 6,
-    borderRadius: 4,
-    transform: [{ rotate: '35deg' }],
-    backgroundColor: '#30353e',
+  coverArt: {
+    width: 238,
+    height: 238,
+    maxWidth: '100%',
+    borderRadius: 20,
   },
   songTitle: {
-    color: '#1f232b',
-    fontSize: 22,
+    color: WireframeTheme.textPrimary,
+    fontSize: 24,
     fontWeight: '700',
-    marginTop: 6,
+    marginTop: 12,
   },
-  artist: {
-    color: '#636a78',
-    marginTop: 4,
-    marginBottom: 14,
+  songArtist: {
+    color: WireframeTheme.textSecondary,
+    marginTop: 5,
+    marginBottom: 2,
+  },
+  controlsPanel: {
+    flex: 1,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.24)',
+    backgroundColor: 'rgba(8, 27, 50, 0.64)',
+    padding: 12,
+  },
+  controlsPanelDesktop: {
+    flex: 1.2,
   },
   sliderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   timeText: {
-    color: '#5f6773',
-    fontSize: 11,
+    color: WireframeTheme.textSecondary,
+    fontSize: 12,
+    width: 36,
+    textAlign: 'center',
   },
   sliderTrack: {
     flex: 1,
-    height: 4,
-    borderRadius: 4,
-    backgroundColor: '#b9bec8',
+    height: 5,
+    borderRadius: 5,
+    backgroundColor: '#97a7bf',
     justifyContent: 'center',
   },
   sliderProgress: {
-    width: '38%',
-    height: 4,
-    borderRadius: 4,
-    backgroundColor: '#363c47',
+    width: '42%',
+    height: 5,
+    borderRadius: 5,
+    backgroundColor: '#ffffff',
   },
   sliderThumb: {
     position: 'absolute',
-    left: '38%',
-    marginLeft: -5,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#242933',
+    left: '42%',
+    marginLeft: -6,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#ffffff',
   },
   controlsRow: {
-    marginTop: 26,
+    marginTop: 20,
+    marginBottom: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  controlsRowTablet: {
+    paddingHorizontal: 10,
+  },
   controlButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#222831',
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.28)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   playButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#171b22',
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  queueLabel: {
+    color: WireframeTheme.textPrimary,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    fontSize: 12,
+  },
+  queueList: {
+    marginTop: 8,
+    flex: 1,
+  },
+  queueListContent: {
+    paddingBottom: 8,
+    gap: 8,
+  },
+  queueItem: {
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 12,
+    padding: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  queueItemActive: {
+    borderColor: '#ffffff',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  queueThumb: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+  },
+  queueTextWrap: {
+    flex: 1,
+  },
+  queueTitle: {
+    color: WireframeTheme.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  queueArtist: {
+    color: WireframeTheme.textSecondary,
+    marginTop: 2,
+    fontSize: 12,
+  },
+  queueDuration: {
+    color: WireframeTheme.textSecondary,
+    fontSize: 11,
   },
 });
