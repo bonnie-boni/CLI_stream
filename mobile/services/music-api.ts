@@ -13,6 +13,13 @@ type SearchResponse = {
   query: string;
   count: number;
   songs: SongDto[];
+  cached?: boolean;
+};
+
+type StreamResponse = {
+  stream_url: string;
+  title: string;
+  duration: number;
 };
 
 const API_PORT = 8765;
@@ -32,12 +39,25 @@ function resolveApiBaseUrl() {
 
 const API_BASE = resolveApiBaseUrl();
 
-export async function searchSongs(query: string, limit = 25): Promise<SongDto[]> {
+export async function searchSongs(query: string, limit = 20, signal?: AbortSignal): Promise<SongDto[]> {
   const params = new URLSearchParams({ q: query, limit: String(limit) });
-  const response = await fetch(`${API_BASE}/songs/search?${params.toString()}`);
+  const response = await fetch(`${API_BASE}/songs/search?${params.toString()}`, { signal });
 
   if (!response.ok) {
-    throw new Error('Failed to search songs');
+    const body = await response.text();
+    throw new Error(body || 'Failed to search songs');
+  }
+
+  const data = (await response.json()) as SearchResponse;
+  return data.songs ?? [];
+}
+
+export async function getPreloadedSongs(signal?: AbortSignal): Promise<SongDto[]> {
+  const response = await fetch(`${API_BASE}/songs/preloaded`, { signal });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(body || 'Failed to load preloaded songs');
   }
 
   const data = (await response.json()) as SearchResponse;
@@ -56,8 +76,21 @@ export async function downloadSong(song: SongDto): Promise<void> {
   });
 
   if (!response.ok) {
-    throw new Error('Download failed');
+    const body = await response.text();
+    throw new Error(body || 'Download failed');
   }
+}
+
+export async function getSongStream(songUrl: string): Promise<StreamResponse> {
+  const params = new URLSearchParams({ url: songUrl });
+  const response = await fetch(`${API_BASE}/songs/stream?${params.toString()}`);
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(body || 'Failed to resolve stream URL');
+  }
+
+  return (await response.json()) as StreamResponse;
 }
 
 export { API_BASE };

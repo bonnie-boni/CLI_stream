@@ -28,7 +28,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tracks',
+          title: 'Songs',
           tabBarIcon: ({ color }) => <MaterialIcons size={24} name="library-music" color={color} />,
         }}
       />

@@ -95,6 +95,7 @@ cli-music-api --host 0.0.0.0 --port 8765
 Available endpoints:
 
 - `GET /health`
+- `GET /songs/preloaded` (server-warmed Moji Shortbaba songs)
 - `GET /songs/search?q=<query>&limit=25`
 - `POST /songs/download` with JSON body:
    - `id` (optional)

@@ -1,209 +1,238 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { MusicAppShell } from '@/components/music-app-shell';
-import { WireframeTheme } from '@/constants/wireframe-theme';
 
 type Playlist = {
   id: string;
   title: string;
-  count: string;
+  subtitle: string;
   icon: keyof typeof MaterialIcons.glyphMap;
-  color: string;
+  songCount: number;
 };
 
-const lists: Playlist[] = [
-  { id: '1', title: 'Liked Songs', count: '7 Songs', icon: 'favorite', color: WireframeTheme.accentRed },
-  { id: '2', title: 'Last Played', count: '12 Songs', icon: 'history', color: WireframeTheme.accentTeal },
-  { id: '3', title: 'Most Played', count: '12 Songs', icon: 'star', color: WireframeTheme.accentYellow },
-  { id: '4', title: 'feat. SIRUP', count: '15 Songs', icon: 'person', color: '#8da1bd' },
-  { id: '5', title: 'PROIBIDO C.V DJ VULDO PARAISO', count: '104 Songs', icon: 'album', color: '#8a91a2' },
+const PLAYLISTS: Playlist[] = [
+  { id: '1', title: 'Moji Favorites', subtitle: 'Most played tracks this month', icon: 'favorite', songCount: 28 },
+  { id: '2', title: 'Worship Session', subtitle: 'Calm and uplifting songs', icon: 'church', songCount: 32 },
+  { id: '3', title: 'Morning Drive', subtitle: 'Bright afro-gospel vibes', icon: 'directions-car', songCount: 19 },
+  { id: '4', title: 'Offline Downloads', subtitle: 'Tracks stored on your device', icon: 'download-done', songCount: 44 },
+  { id: '5', title: 'Mix Queue', subtitle: 'Automatic smart queue', icon: 'queue-music', songCount: 17 },
 ];
 
-const tabs = ['Tracks', 'Playlists', 'Import'] as const;
-
 export default function PlaylistsScreen() {
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 1024;
+
+  const [query, setQuery] = useState('');
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) {
+      return PLAYLISTS;
+    }
+
+    return PLAYLISTS.filter((list) => `${list.title} ${list.subtitle}`.toLowerCase().includes(q));
+  }, [query]);
+
   return (
     <MusicAppShell>
-      <View style={styles.searchBar}>
-        <MaterialIcons name="search" size={18} color={WireframeTheme.textSecondary} />
-        <TextInput
-          placeholder="Find your favorite songs"
-          placeholderTextColor={WireframeTheme.textSecondary}
-          style={styles.searchInput}
-        />
-      </View>
+      <View style={styles.page}>
+        <View style={[styles.mainPane, isDesktop ? styles.mainPaneDesktop : null]}>
+          <Text style={styles.heading}>Your Library</Text>
+          <Text style={styles.subheading}>Build playlists, keep downloads, and jump back into your favorite artists.</Text>
 
-      <View style={styles.segmentRow}>
-        {tabs.map((tab, idx) => (
-          <Pressable key={tab} style={styles.segmentButton}>
-            <Text style={[styles.segmentText, idx === 1 && styles.segmentTextActive]}>{tab}</Text>
-            {idx === 1 ? <View style={styles.activeLine} /> : null}
-          </Pressable>
-        ))}
-        <View style={styles.rowMenuIcon}>
-          <MaterialIcons name="menu" size={18} color={WireframeTheme.textSecondary} />
-        </View>
-      </View>
-
-      <Pressable style={styles.newPlaylistButton}>
-        <View style={styles.newIconWrap}>
-          <MaterialIcons name="add" size={18} color={WireframeTheme.activeBlue} />
-        </View>
-        <Text style={styles.newPlaylistText}>New Playlist</Text>
-      </Pressable>
-
-      <FlatList
-        data={lists}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        renderItem={({ item }) => (
-          <View style={styles.row}>
-            <View style={[styles.iconBox, { backgroundColor: item.color }]}>
-              <MaterialIcons name={item.icon} size={16} color="#f6f9ff" />
-            </View>
-            <View style={styles.textWrap}>
-              <Text numberOfLines={1} style={styles.title}>
-                {item.title}
-              </Text>
-              <Text style={styles.count}>{item.count}</Text>
-            </View>
+          <View style={styles.searchBar}>
+            <MaterialIcons name="search" size={19} color="#9eb0ce" />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search playlists"
+              placeholderTextColor="#7f90ad"
+              style={styles.searchInput}
+            />
+            <Pressable style={styles.addButton}>
+              <MaterialIcons name="add" size={18} color="#ffffff" />
+            </Pressable>
           </View>
-        )}
-      />
 
-      <View style={styles.miniPlayer}>
-        <View style={styles.miniCover} />
-        <View style={styles.textWrap}>
-          <Text numberOfLines={1} style={styles.title}>
-            The Weeknd - Die For You
-          </Text>
-          <Text numberOfLines={1} style={styles.count}>
-            The Weeknd
-          </Text>
+          <FlatList
+            data={filtered}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            renderItem={({ item }) => (
+              <Pressable style={styles.card} onPress={() => router.push('/(tabs)')}>
+                <View style={styles.iconWrap}>
+                  <MaterialIcons name={item.icon} size={22} color="#f4f8ff" />
+                </View>
+                <View style={styles.cardTextWrap}>
+                  <Text numberOfLines={1} style={styles.cardTitle}>
+                    {item.title}
+                  </Text>
+                  <Text numberOfLines={1} style={styles.cardSubtitle}>
+                    {item.subtitle}
+                  </Text>
+                </View>
+                <View style={styles.countWrap}>
+                  <Text style={styles.countText}>{item.songCount}</Text>
+                  <Text style={styles.countLabel}>Songs</Text>
+                </View>
+              </Pressable>
+            )}
+          />
         </View>
-        <MaterialIcons name="play-arrow" size={24} color={WireframeTheme.textPrimary} />
+
+        {isDesktop ? (
+          <View style={styles.desktopPane}>
+            <Text style={styles.desktopPaneTitle}>Quick Actions</Text>
+            <Pressable style={styles.quickAction} onPress={() => router.push('/(tabs)')}>
+              <MaterialIcons name="search" size={18} color="#45b5ff" />
+              <Text style={styles.quickActionText}>Find more Moji songs</Text>
+            </Pressable>
+            <Pressable style={styles.quickAction} onPress={() => router.push('/(tabs)/explore')}>
+              <MaterialIcons name="play-circle-filled" size={18} color="#45b5ff" />
+              <Text style={styles.quickActionText}>Open full player</Text>
+            </Pressable>
+            <Pressable style={styles.quickAction}>
+              <MaterialIcons name="download" size={18} color="#45b5ff" />
+              <Text style={styles.quickActionText}>Manage downloads</Text>
+            </Pressable>
+          </View>
+        ) : null}
       </View>
     </MusicAppShell>
   );
 }
 
 const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#070a10',
+  },
+  mainPane: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+  },
+  mainPaneDesktop: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+  },
+  heading: {
+    color: '#f3f8ff',
+    fontSize: 30,
+    fontWeight: '800',
+  },
+  subheading: {
+    marginTop: 4,
+    color: '#9ba9c1',
+    maxWidth: 620,
+    fontSize: 13,
+  },
   searchBar: {
-    height: 42,
-    borderRadius: 10,
+    marginTop: 12,
+    height: 46,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: WireframeTheme.border,
-    backgroundColor: WireframeTheme.panel,
+    borderColor: '#1d2738',
+    backgroundColor: '#111725',
+    paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 10,
-    marginBottom: 10,
   },
   searchInput: {
-    color: WireframeTheme.textPrimary,
     flex: 1,
-    fontSize: 14,
+    color: '#eff5ff',
+    fontSize: 15,
   },
-  segmentRow: {
-    flexDirection: 'row',
+  addButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#1f8cff',
     alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'center',
   },
-  segmentButton: {
-    marginRight: 16,
-    paddingBottom: 8,
+  listContent: {
+    paddingTop: 10,
+    paddingBottom: 24,
+    gap: 8,
   },
-  segmentText: {
-    color: WireframeTheme.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  segmentTextActive: {
-    color: WireframeTheme.textPrimary,
-  },
-  activeLine: {
-    marginTop: 6,
-    height: 2,
-    borderRadius: 2,
-    backgroundColor: WireframeTheme.activeBlue,
-  },
-  rowMenuIcon: {
-    marginLeft: 'auto',
-    paddingHorizontal: 6,
-  },
-  newPlaylistButton: {
-    borderRadius: 10,
+  card: {
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: WireframeTheme.border,
-    backgroundColor: WireframeTheme.panel,
+    borderColor: '#1b2534',
+    backgroundColor: '#0f1622',
     padding: 10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  newIconWrap: {
-    width: 26,
-    height: 26,
-    borderRadius: 7,
-    backgroundColor: WireframeTheme.activeBlueSoft,
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#1a314d',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  newPlaylistText: {
-    color: WireframeTheme.activeBlue,
-    fontWeight: '700',
-  },
-  listContainer: {
-    paddingTop: 8,
-    paddingBottom: 10,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1f2531',
-  },
-  iconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  textWrap: {
+  cardTextWrap: {
     flex: 1,
   },
-  title: {
-    color: WireframeTheme.textPrimary,
-    fontWeight: '600',
-    fontSize: 13,
+  cardTitle: {
+    color: '#f3f8ff',
+    fontWeight: '700',
+    fontSize: 16,
   },
-  count: {
-    color: WireframeTheme.textSecondary,
-    marginTop: 2,
+  cardSubtitle: {
+    marginTop: 3,
+    color: '#96a7c2',
+    fontSize: 12,
+  },
+  countWrap: {
+    alignItems: 'flex-end',
+    minWidth: 54,
+  },
+  countText: {
+    color: '#45b5ff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  countLabel: {
+    color: '#8ea0bb',
     fontSize: 11,
   },
-  miniPlayer: {
-    borderTopWidth: 1,
-    borderColor: WireframeTheme.border,
-    backgroundColor: '#11151d',
-    marginHorizontal: -14,
-    marginBottom: -8,
-    marginTop: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+  desktopPane: {
+    width: 320,
+    borderLeftWidth: 1,
+    borderLeftColor: '#1b2534',
+    backgroundColor: '#0d131f',
+    padding: 18,
+    gap: 10,
+  },
+  desktopPaneTitle: {
+    color: '#f3f8ff',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  quickAction: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#223148',
+    backgroundColor: '#121b2a',
+    paddingHorizontal: 12,
+    paddingVertical: 11,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  miniCover: {
-    width: 34,
-    height: 34,
-    borderRadius: 6,
-    backgroundColor: '#2a3346',
+  quickActionText: {
+    color: '#d8e4f6',
+    fontWeight: '600',
   },
 });

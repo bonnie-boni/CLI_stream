@@ -14,10 +14,11 @@ export function MusicAppShell({ children, padded = true }: MusicAppShellProps) {
   const isTablet = width >= 768;
   const isDesktop = width >= 1100;
   const frameWidth = isWeb ? Math.min(1280, Math.max(360, width - 40)) : width;
-  const horizontalPadding = padded ? (isDesktop ? 30 : isTablet ? 22 : 14) : 0;
-  const verticalPadding = padded ? (isDesktop ? 20 : 10) : 0;
+  const horizontalPadding = padded ? (isDesktop ? 0 : isTablet ? 0 : 0) : 0;
+  const verticalPadding = padded ? (isDesktop ? 0 : 0) : 0;
 
   return (
+    
     <SafeAreaView style={styles.root}>
       <View style={styles.webBackdrop}>
         <View
@@ -55,8 +56,7 @@ const styles = StyleSheet.create({
     backgroundColor: WireframeTheme.bg,
   },
   webFrame: {
-    borderRadius: 20,
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: 'rgba(255,255,255,0)',
     overflow: 'hidden',
   },
