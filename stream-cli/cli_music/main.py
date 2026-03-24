@@ -54,7 +54,7 @@ def main():
                 break
             continue
 
-        allow_mixes = ask_or_cancel(questionary.confirm("Include mixes/playlists?", default=False))
+        allow_mixes = ask_or_cancel(questionary.confirm("Include Remixes/Mixes/Playlists?", default=False))
         sort_mode = ask_or_cancel(questionary.select("Sort by year:", choices=["Random", "Newest", "Oldest"]))
 
         if mode == "Search Song":
@@ -133,7 +133,7 @@ def run():
     try:
         main()
     except KeyboardInterrupt:
-        show_closing("Bye👋! Session closed cleanly")
+        show_closing("Bye👋! See you later!")
 
 
 if __name__ == "__main__":
