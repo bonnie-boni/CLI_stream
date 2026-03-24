@@ -29,4 +29,11 @@ def fallback_message(action, exc):
     if any(token in lowered for token in yt_tokens):
         return f"Provider access issue while trying to {action}. Try another song or refresh auth cookies."
 
+    ffmpeg_tokens = ["ffmpeg", "postprocess", "post-process", "conversion", "extractaudio"]
+    if any(token in lowered for token in ffmpeg_tokens):
+        return (
+            f"Audio conversion failed while trying to {action}. "
+            "The app retried without conversion; if this keeps happening, install ffmpeg and retry."
+        )
+
     return f"Could not {action}. Please try again."
